@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chá de Casa Nova — Tassiana & Nathalia</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      text-align: center;
+      padding: 20px;
+      background-color: #ffe4e1;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    ul.present-list {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+    li.available {
+      background-color: #fff3cd;
+    }
+    li.bought {
+      background-color: #d4edda;
+    }
+    .btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .status {
+      margin-top: 15px;
+      font-style: italic;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #ffe4e1;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Chá de Casa Nova</h1>
+    <p class="subtitle">Tassiana & Nathalia — escolha um presente 💕</p>
+  </header>
+
+  <main class="container">
+    <h2>Lista de Presentes</h2>
+    <ul id="lista-presentes" class="present-list"></ul>
+
+    <div id="status" class="status">Conectando...</div>
+  </main>
+
+  <footer>
+    <small>Feito com carinho 💗</small>
+  </footer>
+
+  <!-- Firebase + app script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, onSnapshot, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyB9gTaojRXu7J7g7yI7Hw_9lb3yDMr1ydg",
+        authDomain: "cha-de-casa-nova-9034c.firebaseapp.com",
+        projectId: "cha-de-casa-nova-9034c",
+        storageBucket: "cha-de-casa-nova-9034c.firebasestorage.app",
+        messagingSenderId: "396610857130",
+        appId: "1:396610857130:web:14590d41081486e57048d3",
+        measurementId: "G-Y8GJQB19PR"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const presentesColl = collection(db, "presentes");
+
+      const defaultItems = [
+        { id: "lencol_fronha_casal", name: "Lençol e fronha casal", buyer: "", bought: false },
+        { id: "cobre_leito", name: "Cobre leito", buyer: "", bought: false },
+        { id: "protetor_colchao", name: "Protetor de colchão", buyer: "", bought: false },
+        { id: "travesseiros", name: "Travesseiros", buyer: "", bought: false },
+        { id: "kit_vassoura_rodo_pa", name: "Kit vassoura + rodo + pá", buyer: "", bought: false },
+        { id: "mop", name: "Mop", buyer: "", bought: false },
+        { id: "cortina_quarto_1", name: "Cortina para quarto 1", buyer: "", bought: false },
+        { id: "cortina_quarto_2", name: "Cortina para quarto 2", buyer: "", bought: false },
+        { id: "cortina_sala_estar", name: "Cortina para sala de estar", buyer: "", bought: false },
+        { id: "cortina_grande_sala_jantar", name: "Cortina grande para sala de jantar", buyer: "", bought: false },
+        { id: "pano_chao_prato", name: "Pano de chão + de prato", buyer: "", bought: false },
+        { id: "cesto_roupa_suja", name: "Cesto de roupa suja", buyer: "", bought: false },
+        { id: "jogo_toalhas", name: "Jogo de toalhas", buyer: "", bought: false },
+        { id: "conjunto_panelas", name: "Conjunto de panelas", buyer: "", bought: false },
+        { id: "jogo_pratos", name: "Jogo de pratos", buyer: "", bought: false },
+        { id: "jogo_sobremesa", name: "Jogo de sobremesa", buyer: "", bought: false },
+        { id: "xicaras", name: "Xícaras", buyer: "", bought: false },
+        { id: "tacas", name: "Taças", buyer: "", bought: false },
+        { id: "potes_hermeticos", name: "Potes herméticos", buyer: "", bought: false },
+        { id: "queijeira", name: "Queijeira", buyer: "", bought: false },
+        { id: "travessas", name: "Travessas", buyer: "", bought: false },
+        { id: "jogo_assadeiras", name: "Jogo de assadeiras", buyer: "", bought: false },
+        { id: "mixer", name: "Mixer", buyer: "", bought: false },
+        { id: "jogo_americano", name: "Jogo americano", buyer: "", bought: false },
+        { id: "jogo_talheres", name: "Jogo de talheres", buyer: "", bought: false },
+        { id: "jogo_facas_cortes", name: "Jogo de facas de cortes", buyer: "", bought: false },
+        { id: "panela_pressao", name: "Panela de pressão", buyer: "", bought: false },
+        { id: "liquidificador", name: "Liquidificador", buyer: "", bought: false },
+        { id: "batedeira", name: "Batedeira", buyer: "", bought: false },
+        { id: "sanduicheira", name: "Sanduicheira", buyer: "", bought: false },
+        { id: "ventilador", name: "Ventilador", buyer: "", bought: false },
+        { id: "ferro_passar_roupa", name: "Ferro de passar roupa", buyer: "", bought: false }
+      ];
+
+      const listaEl = document.getElementById("lista-presentes");
+      const statusEl = document.getElementById("status");
+
+      async function ensureDefaultItems() {
+        const anyDoc = await getDoc(doc(db, "presentes", defaultItems[0].id));
+        if(!anyDoc.exists()){
+          for(const it of defaultItems){
+            await setDoc(doc(presentesColl, it.id), it);
+          }
+        }
+      }
+
+      function renderItem(item){
+        const li = document.createElement("li");
+        li.dataset.id = item.id;
+        li.className = item.bought ? "bought" : "available";
+
+        const info = document.createElement("div");
+        info.className = "present-info";
+
+        const name = document.createElement("div");
+        name.className = "present-item-name";
+        name.textContent = item.name;
+
+        const meta = document.createElement("div");
+        meta.className = "present-item-meta";
+        meta.textContent = item.bought ? `Comprado por: ${item.buyer}` : "Disponível";
+
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = item.bought ? "Desmarcar ✔" : "Marcar como comprado";
+
+        btn.addEventListener("click", async () => {
+          const docRef = doc(db, "presentes", item.id);
+          try {
+            await runTransaction(db, async (t) => {
+              const d = await t.get(docRef);
+              if(!d.exists()) throw "Documento não existe";
+              const data = d.data();
+
+              if(!data.bought){
+                const nome = prompt("Digite seu nome para marcar este presente como comprado:");
+                if(!nome) return;
+                t.update(docRef, { bought: true, buyer: nome });
+              } else {
+                const confirmar = confirm(`Deseja desmarcar ${data.name} comprado por ${data.buyer}?`);
+                if(confirmar){
+                  t.update(docRef, { bought: false, buyer: "" });
+                }
+              }
+            });
+          } catch (err) {
+            alert(typeof err === "string" ? err : "Falha ao atualizar. Tente novamente.");
+          }
+        });
+
+        li.appendChild(info);
+        li.appendChild(btn);
+        return li;
+      }
+
+      function startRealtime(){
+        onSnapshot(presentesColl, (snap) => {
+          listaEl.innerHTML = "";
+          const items = [];
+          snap.forEach(docSnap => items.push({ id: docSnap.id, ...docSnap.data() }));
+          items.sort((a,b) => a.bought - b.bought);
+          items.forEach(item => listaEl.appendChild(renderItem(item)));
+          statusEl.textContent = "Atualizado em tempo real ✅";
+        }, (err) => {
+          statusEl.textContent = "Erro na conexão: " + err.message;
+        });
+      }
+
+      statusEl.textContent = "Verificando dados... ⏳";
+      try{
+        await ensureDefaultItems();
+        startRealtime();
+      }catch(e){
+        statusEl.textContent = "Erro: " + (e.message || e);
+      }
+
+    });
+  </script>
+</body>
+</html>
+
